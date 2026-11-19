@@ -36,7 +36,7 @@ jobs:
 
   mutation:
     name: 變異測試 ${{ matrix.shard }}（Stryker 100 分）
-    needs: coverage
+    # 不等單元測試：測試壞掉時 Stryker 的初始測試也會在幾秒內失敗
     runs-on: ubuntu-latest
     timeout-minutes: 30
     strategy:
@@ -47,8 +47,10 @@ jobs:
             mutate: lib/**/*.js
           - shard: content
             mutate: content.js
+          - shard: review
+            mutate: review.js
           - shard: pages
-            mutate: background.js,options.js,popup.js,review.js
+            mutate: background.js,options.js,popup.js
     env:
       INCREMENTAL_FILE: reports/stryker-incremental-${{ matrix.shard }}.json
     steps:

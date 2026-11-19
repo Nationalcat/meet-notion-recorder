@@ -84,7 +84,7 @@ npm run mutation    # Stryker 變異測試，門檻 100 分
 - `test/helpers/setup.js` 會讓任何未處理的錯誤直接使測試失敗。
 - Stryker 需要開本機連接埠給 worker 使用；在 Claude Code 的沙箱中要允許 local binding。
 - 變異測試使用增量模式（結果存在 `reports/stryker-incremental.json`），第二次起只重測有變動的部分；要完整重跑就刪掉該檔。
-- CI 把變異測試分成 lib / content / pages 三組平行執行，各自快取增量結果。
+- CI 把變異測試分成 lib / content / review / pages 四組，與單元測試同時平行執行，各自快取增量結果。
 
 ## 測試字幕擷取（不用真的開會）
 
