@@ -39,7 +39,7 @@ async function poll() {
 }
 
 $('#toggle').addEventListener('click', async () => {
-  if (tabId == null || !st) return;
+  if (!st) return; // 有 st 就一定有 tabId
   await chrome.tabs.sendMessage(tabId, { type: 'SET_RECORDING', value: !st.recording });
   poll();
 });

@@ -29,7 +29,7 @@
   let inCall = false;
   let leaveMisses = 0;
   let recording = true;
-  let dirty = false;
+  let dirty; // 開始會議時設為 true
   let lastSave = 0;
   let region = null;
   let observer = null;
@@ -37,7 +37,7 @@
   let captionClicks = 0;
   const blockEntry = new WeakMap(); // 字幕區塊元素 → 逐字稿條目
 
-  const safe = (fn) => { try { return fn(); } catch { return undefined; } };
+  const safe = (fn) => { try { fn(); } catch { /* 擴充元件重新載入後 chrome.* 會失效 */ } };
   const send = (msg) => safe(() => chrome.runtime.sendMessage(msg).catch(() => {}));
 
   safe(() => chrome.storage.local.get('settings').then(({ settings: s }) => Object.assign(settings, s || {})));
@@ -47,7 +47,7 @@
 
   const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel));
   const clean = (s) => (s || '').replace(/\s+/g, ' ').trim();
-  const lines = (s) => (s || '').split('\n').map(clean).filter(Boolean);
+  const lines = (s) => s.split('\n').map(clean).filter(Boolean);
 
   function meetCode() {
     const m = location.pathname.match(/([a-z]{3,4}-[a-z]{4}-[a-z]{3,4})/i);
@@ -80,25 +80,25 @@
       }));
     }
     // 備援：每段發言都有講者頭像，從頭像往上找到「名字 + 內容」的區塊
-    const out = [];
-    const seen = new Set();
+    const els = new Set();
     for (const img of $$('img', root)) {
       let el = img.parentElement;
-      while (el && el !== root && lines(el.innerText).length < 2) el = el.parentElement;
-      if (!el || el === root || seen.has(el)) continue;
-      seen.add(el);
-      const [speaker, ...rest] = lines(el.innerText);
-      out.push({ el, speaker, text: clean(rest.join(' ')) });
+      while (el !== root && lines(el.innerText).length < 2) el = el.parentElement;
+      if (el !== root) els.add(el);
     }
-    return out;
+    return [...els].map((el) => {
+      const [speaker, ...rest] = lines(el.innerText);
+      return { el, speaker, text: clean(rest.join(' ')) };
+    });
   }
 
   // Meet 會就地修正字幕，長段落也可能把開頭裁掉；盡量合併而不遺失內容
   function mergeText(oldT, newT) {
-    if (!oldT || newT === oldT) return newT;
+    // 也涵蓋舊文字為空、或兩者相同的情況
     if (newT.startsWith(oldT.slice(0, Math.min(15, oldT.length)))) return newT;
     // 開頭被裁掉：舊文字的結尾與新文字的開頭重疊
-    for (let k = Math.min(oldT.length, newT.length); k >= 8; k--) {
+    // k 超過新文字長度時 slice 結果就是整段新文字，所以從舊文字長度開始即可
+    for (let k = oldT.length; k >= 8; k--) {
       if (oldT.endsWith(newT.slice(0, k))) return oldT + newT.slice(k);
     }
     // 開頭被裁掉且結尾被修正：在舊文字中找新文字的開頭
@@ -145,7 +145,7 @@
   function snapshot() {
     return {
       ...meeting,
-      entries: meeting.entries.filter((e) => e.text.trim()).map((e) => ({ ...e }))
+      entries: meeting.entries.map((e) => ({ ...e })) // 條目一定有文字（scan 會略過空字幕）
     };
   }
 
@@ -179,8 +179,8 @@
     send({ type: 'MEETING_STARTED', id: meeting.id });
   }
 
+  // 呼叫端保證 meeting 存在
   function endMeeting() {
-    if (!meeting) return;
     scan();
     meeting.endedAt = Date.now();
     send({ type: 'MEETING_ENDED', meeting: snapshot() });
@@ -220,12 +220,14 @@
         captionsFound: !!region,
         meetingId: meeting?.id || null,
         title: meeting?.title || '',
-        count: meeting ? meeting.entries.filter((e) => e.text).length : 0,
+        count: meeting ? meeting.entries.length : 0,
         last: meeting?.entries[meeting.entries.length - 1] || null
       });
     } else if (msg.type === 'SET_RECORDING') {
       recording = !!msg.value;
-      if (recording) { captionClicks = 0; scheduleScan(); }
+      // 暫停時重設也無妨：暫停中不會點字幕、scan 也會直接返回
+      captionClicks = 0;
+      scheduleScan();
       reply({ recording });
     }
   });
