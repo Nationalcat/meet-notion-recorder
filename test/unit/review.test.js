@@ -333,7 +333,7 @@ describe('存到 Notion', () => {
     await boot({ settings });
     $('#notion').click();
     await tick();
-    expect($('#saveStatus').textContent).toBe('請先到「設定」填入 Notion Token 與目標頁面/資料庫。');
+    expect($('#saveStatus').textContent).toBe('尚未設定 Notion（選用）。可以先用「下載 Markdown」，或到「設定」填入 Notion Token 與目標頁面/資料庫。');
     expect($('#saveStatus').className).toBe('status err');
     expect(saveMeetingToNotion).not.toHaveBeenCalled();
     expect($('#notion').disabled).toBe(false);

@@ -1,0 +1,52 @@
+name: Release
+
+# 推送 v1.2.3 這類 tag 時：跑測試 → 檢查版號 → 打包擴充元件 zip → 建立 GitHub Release
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: 發佈 ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      TAG: ${{ github.ref_name }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 26
+          cache: npm
+      - run: npm ci
+      - run: npm test
+
+      - name: 檢查 tag 與 manifest.json / package.json 版號一致
+        run: |
+          manifest=$(node -p "require('./manifest.json').version")
+          pkg=$(node -p "require('./package.json').version")
+          if [ "v$manifest" != "$TAG" ] || [ "v$pkg" != "$TAG" ]; then
+            echo "::error::tag $TAG 與版號不一致（manifest.json=$manifest, package.json=$pkg）"
+            exit 1
+          fi
+
+      - name: 打包擴充元件
+        run: |
+          mkdir -p dist
+          ZIP="dist/meet-notion-recorder-$TAG.zip"
+          # 只放執行時需要的檔案；*.config.js 是測試工具的設定
+          zip -r "$ZIP" manifest.json ./*.html ./*.css lib $(ls ./*.js | grep -v '\.config\.js$')
+          unzip -l "$ZIP"
+          echo "ZIP=$ZIP" >> "$GITHUB_ENV"
+
+      - name: 建立 GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$TAG" "$ZIP" --title "$TAG" --generate-notes --verify-tag

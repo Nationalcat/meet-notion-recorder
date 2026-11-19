@@ -129,7 +129,7 @@ async function saveNotion(m) {
   if (busy) return;
   const s = await getSettings();
   if (!s.notionToken || !s.notionTarget) {
-    status('#saveStatus', '請先到「設定」填入 Notion Token 與目標頁面/資料庫。', 'err');
+    status('#saveStatus', '尚未設定 Notion（選用）。可以先用「下載 Markdown」，或到「設定」填入 Notion Token 與目標頁面/資料庫。', 'err');
     return;
   }
   busy = true;
