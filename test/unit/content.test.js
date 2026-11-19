@@ -659,7 +659,7 @@ describe('字幕擷取', () => {
 describe('儲存', () => {
   const key = `meeting:abc-defg-hij_${START + 1000}`;
 
-  it('每 3 秒、有變更才存', async () => {
+  it('每秒、有變更才存', async () => {
     await inCall();
     const region = addRegion();
     await step();
@@ -667,13 +667,13 @@ describe('儲存', () => {
     await settle();
     expect(env.chrome.storage.local.set).not.toHaveBeenCalled();
     await step(1);
-    expect(env.chrome.storage.local.set).not.toHaveBeenCalled();
-    await step(1);
     expect(env.chrome.storage.local.set).toHaveBeenCalledTimes(1);
+    expect(env.data[key].entries[0].text).toBe('x');
     await step(5);
     expect(env.chrome.storage.local.set).toHaveBeenCalledTimes(1);
     setText(a, 'x y');
     await settle();
+    expect(env.chrome.storage.local.set).toHaveBeenCalledTimes(1);
     await step(1);
     expect(env.chrome.storage.local.set).toHaveBeenCalledTimes(2);
     expect(env.data[key].entries[0].text).toBe('x y');
@@ -700,9 +700,11 @@ describe('儲存', () => {
     addBlock(region, 'A', 'x');
     await settle();
     env.chrome.storage.local.set.mockRejectedValueOnce(new Error('quota'));
-    await step(3);
+    await step(1);
     expect(env.chrome.storage.local.set).toHaveBeenCalledTimes(1);
     expect(env.data[key]).toBeUndefined();
+    await step(1);
+    expect(env.chrome.storage.local.set).toHaveBeenCalledTimes(2);
     await step(3);
     expect(env.chrome.storage.local.set).toHaveBeenCalledTimes(2);
     expect(env.data[key].entries).toHaveLength(1);

@@ -1,5 +1,3 @@
-import { getSettings } from './lib/shared.js';
-
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
@@ -11,6 +9,7 @@ async function poll() {
   if (!tab?.url?.startsWith('https://meet.google.com/')) {
     $('#state').innerHTML = '目前分頁不是 Google Meet。加入會議後會自動擷取字幕。';
     $('#toggle').hidden = true;
+    $('#live').hidden = true;
     $('#last').hidden = true;
     return;
   }
@@ -24,6 +23,7 @@ async function poll() {
   if (!st.inCall) {
     $('#state').textContent = '尚未加入會議。';
     $('#toggle').hidden = true;
+    $('#live').hidden = true;
     $('#last').hidden = true;
     return;
   }
@@ -32,6 +32,8 @@ async function poll() {
     (st.captionsFound ? '' : '<br><span class="small">⚠️ 找不到字幕區，請按 Meet 下方的「CC」開啟字幕。</span>');
   $('#toggle').hidden = false;
   $('#toggle').textContent = on ? '⏸ 暫停記錄' : '▶︎ 繼續記錄';
+  // 有內容才會存檔；沒存檔時整理頁會退回顯示別場會議
+  $('#live').hidden = !(st.meetingId && st.count);
   if (st.last?.text) {
     $('#last').hidden = false;
     $('#last').innerHTML = `<b>${esc(st.last.speaker)}</b>：${esc(st.last.text.slice(-160))}`;
@@ -43,13 +45,13 @@ $('#toggle').addEventListener('click', async () => {
   await chrome.tabs.sendMessage(tabId, { type: 'SET_RECORDING', value: !st.recording });
   poll();
 });
+// 整理頁面會監聽儲存變動，所以開著就會即時更新這場會議的逐字稿
+$('#live').addEventListener('click', () => {
+  if (!st?.meetingId) return;
+  chrome.tabs.create({ url: chrome.runtime.getURL('review.html#' + encodeURIComponent(st.meetingId)) });
+});
 $('#open').addEventListener('click', () => chrome.tabs.create({ url: chrome.runtime.getURL('review.html') }));
 $('#settings').addEventListener('click', () => chrome.runtime.openOptionsPage());
 
-getSettings().then((s) => {
-  if (!s.notionToken || !s.notionTarget) {
-    $('#settings').textContent = '設定 Notion ⚠️';
-  }
-});
 poll();
 setInterval(poll, 1500);

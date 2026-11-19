@@ -23,7 +23,9 @@ Google Meet 字幕 (CC) ──content.js──▶ chrome.storage（本機逐字�
 2. 點「載入未封裝項目」，選擇 `meet-notion-recorder` 資料夾。
 3. 安裝後會自動打開設定頁。
 
-## 設定 Notion（免費）
+## 設定 Notion（選用，免費）
+
+不設定 Notion 也能擷取逐字稿、產生摘要、下載 Markdown；需要一鍵存到 Notion 時再設定。
 
 1. 到 <https://www.notion.so/profile/integrations> → **New integration**（Internal），複製 **Internal Integration Secret**。
 2. 在 Notion 建立一個資料庫，建議欄位（名稱可用中文或英文，擴充元件會自動對應）：
@@ -43,12 +45,12 @@ Google Meet 字幕 (CC) ──content.js──▶ chrome.storage（本機逐字�
 
 1. 加入 Google Meet 會議 → 擴充元件自動開啟字幕並開始記錄（圖示顯示紅色 `REC`）。
    - 請先在 Meet「設定 → 字幕」選好會議語言（例如中文（台灣））。
-   - 點擴充元件圖示可看到即時狀態、暫停／繼續記錄。
+   - 點擴充元件圖示可看到即時狀態、暫停／繼續記錄；按 **📝 即時逐字稿** 可在會議中開啟逐字稿頁面，每秒自動更新。
 2. 離開會議 → 自動開啟整理頁。
 3. 產生摘要（擇一）：
    - **✨ 用 Chrome 內建 AI 產生**：完全本機、免費。第一次會下載模型。
    - **📋 複製給 Claude 整理**：複製「提示詞＋逐字稿」，貼到 claude.ai，再把結果貼回摘要欄。中文品質通常比內建 AI 好。
-4. 按 **儲存到 Notion**。頁面內容：資訊列 → 摘要（標題、條列、待辦 checkbox）→ 可收合的逐字稿。
+4. 按 **儲存到 Notion**（已設定 Notion 時），或 **下載 Markdown**。頁面內容：資訊列 → 摘要（標題、條列、待辦 checkbox）→ 可收合的逐字稿。
 
 ## Chrome 內建 AI 需求
 

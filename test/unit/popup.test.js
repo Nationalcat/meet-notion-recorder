@@ -32,6 +32,7 @@ describe('popup 狀態', () => {
     expect(env.chrome.tabs.query).toHaveBeenCalledWith({ active: true, currentWindow: true });
     expect($('#state').innerHTML).toBe(NOT_MEET);
     expect($('#toggle').hidden).toBe(true);
+    expect($('#live').hidden).toBe(true);
     expect($('#last').hidden).toBe(true);
     expect(env.chrome.tabs.sendMessage).not.toHaveBeenCalled();
   });
@@ -47,6 +48,7 @@ describe('popup 狀態', () => {
     await boot({ status: { inCall: false } });
     expect($('#state').textContent).toBe('尚未加入會議。');
     expect($('#toggle').hidden).toBe(true);
+    expect($('#live').hidden).toBe(true);
     expect($('#last').hidden).toBe(true);
   });
 
@@ -76,6 +78,24 @@ describe('popup 狀態', () => {
     expect($('#state').innerHTML).toBe('<span class="dot "></span>已暫停 · 0 段');
     expect($('#toggle').textContent).toBe('▶︎ 繼續記錄');
     expect($('#last').hidden).toBe(true);
+  });
+
+  it.each([
+    ['有會議、有內容', { meetingId: 'm1', count: 2 }, false],
+    ['有會議、沒內容', { meetingId: 'm1', count: 0 }, true],
+    ['沒有會議 id', { meetingId: null, count: 2 }, true]
+  ])('即時逐字稿按鈕：%s', async (_n, extra, hidden) => {
+    await boot({ status: { inCall: true, recording: true, captionsFound: true, last: null, ...extra } });
+    expect($('#live').hidden).toBe(hidden);
+  });
+
+  it('離開會議後隱藏即時逐字稿按鈕', async () => {
+    await boot({ status: { inCall: true, recording: true, count: 1, captionsFound: true, meetingId: 'm1' } });
+    expect($('#live').hidden).toBe(false);
+    env.chrome.tabs.sendMessage.mockResolvedValue({ inCall: false });
+    vi.advanceTimersByTime(1500);
+    await tick();
+    expect($('#live').hidden).toBe(true);
   });
 
   it('最後一句沒有文字時不顯示', async () => {
@@ -120,6 +140,21 @@ describe('popup 按鈕', () => {
     expect(env.chrome.tabs.query).toHaveBeenCalledTimes(1);
   });
 
+  it('開啟這場會議的即時逐字稿', async () => {
+    await boot({ status: { inCall: true, recording: true, count: 1, captionsFound: true, meetingId: 'abc-defg-hij_1#x' } });
+    $('#live').click();
+    expect(env.chrome.tabs.create).toHaveBeenCalledWith({ url: 'chrome-extension://ext/review.html#abc-defg-hij_1%23x' });
+  });
+
+  it.each([
+    ['沒有狀態', { tab: null }],
+    ['沒有會議 id', { status: { inCall: true, recording: true, count: 0, captionsFound: true, meetingId: null } }]
+  ])('即時逐字稿：%s時無效', async (_n, opts) => {
+    await boot(opts);
+    $('#live').click();
+    expect(env.chrome.tabs.create).not.toHaveBeenCalled();
+  });
+
   it('開啟所有會議記錄', async () => {
     await boot({ tab: null });
     $('#open').click();
@@ -133,14 +168,9 @@ describe('popup 按鈕', () => {
   });
 });
 
-describe('popup 設定提示', () => {
-  it.each([
-    [undefined, '設定 Notion ⚠️'],
-    [{ notionToken: 't' }, '設定 Notion ⚠️'],
-    [{ notionTarget: 'x' }, '設定 Notion ⚠️'],
-    [{ notionToken: 't', notionTarget: 'x' }, '設定']
-  ])('%j → %s', async (settings, label) => {
+describe('popup 設定按鈕', () => {
+  it.each([undefined, { notionToken: 't', notionTarget: 'x' }])('Notion 是選用的，不顯示警告（%j）', async (settings) => {
     await boot({ tab: null, settings });
-    expect($('#settings').textContent).toBe(label);
+    expect($('#settings').textContent).toBe('設定');
   });
 });

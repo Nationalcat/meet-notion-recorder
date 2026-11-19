@@ -6,7 +6,6 @@
   window.__meetNotesLoaded = true;
 
   const TICK_MS = 1000;
-  const SAVE_EVERY_MS = 3000;
   const LEAVE_MISSES_TO_END = 3; // 連續幾秒找不到「離開通話」按鈕才判定會議結束
 
   const LEAVE_SEL = [
@@ -30,7 +29,6 @@
   let leaveMisses = 0;
   let recording = true;
   let dirty; // 開始會議時設為 true
-  let lastSave = 0;
   let region = null;
   let observer = null;
   let scanTimer = null;
@@ -152,7 +150,6 @@
   async function save() {
     if (!meeting || !dirty) return;
     dirty = false;
-    lastSave = Date.now();
     const m = snapshot();
     if (!m.entries.length) return;
     try {
@@ -206,7 +203,7 @@
     }
     if (recording) ensureCaptionsOn();
     attachRegion();
-    if (Date.now() - lastSave >= SAVE_EVERY_MS) save();
+    save(); // 每秒存一次（有變更才寫入），讓整理頁面能即時顯示逐字稿
   }
 
   setInterval(tick, TICK_MS);
