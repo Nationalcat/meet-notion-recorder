@@ -5,24 +5,24 @@ import { saveMeetingToNotion } from './lib/notion.js';
 const $ = (s) => document.querySelector(s);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
-let meetings = [];          // 依時間新到舊
-let metas = {};             // id → { title, summary, notionUrl }
+let meetings;               // 依時間新到舊（load 後才有值）
+let store = {};             // chrome.storage.local 快照；meta:<id> → { title, summary, notionUrl }
 let currentId = decodeURIComponent(location.hash.slice(1)) || null;
 let busy = false;
 
 async function load() {
-  const all = await chrome.storage.local.get(null);
-  meetings = Object.keys(all).filter((k) => k.startsWith('meeting:')).map((k) => all[k]).sort((a, b) => b.startedAt - a.startedAt);
-  metas = Object.fromEntries(Object.keys(all).filter((k) => k.startsWith('meta:')).map((k) => [k.slice(5), all[k]]));
+  store = await chrome.storage.local.get(null);
+  meetings = Object.keys(store).filter((k) => k.startsWith('meeting:')).map((k) => store[k]).sort((a, b) => b.startedAt - a.startedAt);
   if (!meetings.some((m) => m.id === currentId)) currentId = meetings[0]?.id || null;
 }
 
-const metaOf = (id) => metas[id] || {};
+const metaOf = (id) => store['meta:' + id] || {};
 const titleOf = (m) => metaOf(m.id).title || m.title || m.meetCode;
 
 async function setMeta(id, patch) {
-  metas[id] = { ...metaOf(id), ...patch };
-  await chrome.storage.local.set({ ['meta:' + id]: metas[id] });
+  const key = 'meta:' + id;
+  store[key] = { ...metaOf(id), ...patch };
+  await chrome.storage.local.set({ [key]: store[key] });
 }
 
 function renderList() {
@@ -193,6 +193,7 @@ $('#list').addEventListener('click', (e) => {
   const li = e.target.closest('li[data-id]');
   if (!li) return;
   currentId = li.dataset.id;
+  // Stryker disable next-line StringLiteral: replaceState 的 title 參數會被瀏覽器忽略
   history.replaceState(null, '', '#' + encodeURIComponent(currentId));
   renderList();
   renderDetail();

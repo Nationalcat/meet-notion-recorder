@@ -71,6 +71,19 @@ Google Meet 字幕 (CC) ──content.js──▶ chrome.storage（本機逐字�
 | `lib/ai.js` | Chrome Prompt API / Summarizer API、長逐字稿分段整理 |
 | `test/mock-meet.html` | 模擬 Meet 字幕 DOM 的測試頁 |
 
+## 單元測試與變異測試
+
+```bash
+npm install
+npm test            # Vitest + jsdom
+npm run coverage    # 覆蓋率，門檻 100%（statements / branches / functions / lines）
+npm run mutation    # Stryker 變異測試，門檻 100 分
+```
+
+- 測試在 `test/unit/`，`test/helpers/chrome.js` 提供記憶體版的 `chrome.*` API。
+- `test/helpers/setup.js` 會讓任何未處理的錯誤直接使測試失敗。
+- Stryker 需要開本機連接埠給 worker 使用；在 Claude Code 的沙箱中要允許 local binding。
+
 ## 測試字幕擷取（不用真的開會）
 
 ```bash
