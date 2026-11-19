@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>會議記錄</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .app { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+    aside { background: var(--panel); border-right: 1px solid var(--border); padding: 16px 0; overflow-y: auto; max-height: 100vh; position: sticky; top: 0; }
+    aside h1 { padding: 0 16px; }
+    aside .top { display: flex; justify-content: space-between; align-items: center; padding-right: 12px; }
+    #list { list-style: none; margin: 8px 0 0; padding: 0; }
+    #list li { padding: 10px 16px; cursor: pointer; border-left: 3px solid transparent; }
+    #list li:hover { background: var(--bg); }
+    #list li.active { background: var(--bg); border-left-color: var(--accent); }
+    #list .t { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    main { padding: 24px 32px; max-width: 980px; }
+    #title { font-size: 20px; font-weight: 700; border-color: transparent; padding-left: 0; }
+    #title:hover, #title:focus { border-color: var(--border); padding-left: 10px; }
+    section { margin-top: 22px; }
+    .transcript { max-height: 60vh; overflow-y: auto; }
+    .line { padding: 4px 0; display: grid; grid-template-columns: 74px 1fr; gap: 8px; }
+    .line .time { color: var(--muted); font-variant-numeric: tabular-nums; font-size: 12px; padding-top: 2px; }
+    .line b { margin-right: 4px; }
+    .empty { padding: 60px 0; text-align: center; color: var(--muted); }
+    .live { color: var(--rec); font-weight: 600; }
+    @media (max-width: 760px) {
+      .app { grid-template-columns: 1fr; }
+      aside { position: static; max-height: 40vh; }
+      main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside>
+      <div class="top"><h1>會議記錄</h1><a href="options.html" class="small">設定</a></div>
+      <ul id="list"></ul>
+    </aside>
+    <main id="detail"><div class="empty">還沒有會議記錄。加入 Google Meet 後會自動開始擷取字幕。</div></main>
+  </div>
+  <script type="module" src="review.js"></script>
+</body>
+</html>

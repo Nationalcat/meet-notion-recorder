@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Meet 會議記錄 → Notion",
+  "version": "1.0.0",
+  "description": "擷取 Google Meet 即時字幕成逐字稿，用 Chrome 內建 AI 產生摘要，並寫入 Notion。",
+  "permissions": ["storage"],
+  "host_permissions": [
+    "https://meet.google.com/*",
+    "https://api.notion.com/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://meet.google.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "action": {
+    "default_title": "Meet 會議記錄",
+    "default_popup": "popup.html"
+  },
+  "options_page": "options.html"
+}

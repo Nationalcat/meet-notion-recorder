@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <title>Meet - 週會</title>
+</head>
+<body>
+  <!-- 模擬 Google Meet 的字幕 DOM，用來測試 content.js（不需真的開會）。結果在 window.__test。 -->
+  <button id="leave" aria-label="離開通話">離開</button>
+  <button id="cc" aria-label="開啟字幕 (c)" aria-pressed="false">CC</button>
+  <pre id="out"></pre>
+  <script>
+    const store = {};
+    const sent = [];
+    window.chrome = {
+      storage: {
+        local: {
+          get: async () => ({}),
+          set: async (o) => { Object.assign(store, JSON.parse(JSON.stringify(o))); }
+        },
+        onChanged: { addListener() {} }
+      },
+      runtime: { sendMessage: async (m) => { sent.push(m); }, onMessage: { addListener() {} } }
+    };
+    window.__test = { store, sent };
+
+    const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+    let list;
+    document.getElementById('cc').addEventListener('click', (e) => {
+      e.target.setAttribute('aria-pressed', 'true');
+      const region = document.createElement('div');
+      region.setAttribute('role', 'region');
+      region.setAttribute('aria-label', '字幕');
+      list = document.createElement('div');
+      region.appendChild(list);
+      document.body.appendChild(region);
+    });
+
+    // 不使用已知 class，測試「頭像備援」解析
+    function addBlock(name) {
+      const b = document.createElement('div');
+      b.innerHTML = `<div><img alt=""><div>${name}</div></div><div class="txt"></div>`;
+      list.appendChild(b);
+      return b.querySelector('.txt');
+    }
+
+    (async () => {
+      await sleep(2500); // 等 content.js 偵測到通話並點開字幕
+      const a = addBlock('王小明');
+      for (const t of ['大家好', '大家好，今天討論', '大家好，今天討論上線時程', '大家好，今天要討論上線時程和測試分工']) { a.textContent = t; await sleep(400); }
+      const b = addBlock('Amy Chen');
+      b.textContent = 'OK, I will'; await sleep(400);
+      b.textContent = 'OK, I will finish the API tests by Friday.'; await sleep(400);
+      // 長段落開頭被裁掉
+      b.textContent = 'the API tests by Friday. Then we deploy on Monday.'; await sleep(600);
+      a.parentElement.remove(); // 舊區塊被移除
+      await sleep(4000);        // 等待定期儲存
+      document.getElementById('leave').remove();
+      await sleep(4500);        // 連續 3 秒找不到離開按鈕 → 結束
+      window.__test.done = true;
+      document.getElementById('out').textContent = JSON.stringify({ store, sent }, null, 2);
+    })();
+  </script>
+  <script src="../content.js"></script>
+</body>
+</html>

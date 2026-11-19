@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <title>Meet 會議記錄</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { width: 320px; padding: 14px; }
+    .dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: var(--muted); margin-right: 6px; }
+    .dot.on { background: var(--rec); animation: pulse 1.4s infinite; }
+    @keyframes pulse { 50% { opacity: .35; } }
+    #last { margin-top: 10px; font-size: 13px; max-height: 80px; overflow: hidden; }
+    .row { margin-top: 12px; }
+    .row button { flex: 1; }
+  </style>
+</head>
+<body>
+  <h1>Meet 會議記錄</h1>
+  <div id="state" class="muted">檢查中…</div>
+  <div id="last" class="card" hidden></div>
+  <div class="row">
+    <button id="toggle" hidden></button>
+  </div>
+  <div class="row">
+    <button id="open" class="primary">所有會議記錄</button>
+    <button id="settings">設定</button>
+  </div>
+  <script type="module" src="popup.js"></script>
+</body>
+</html>

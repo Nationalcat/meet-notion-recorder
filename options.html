@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Meet 會議記錄 設定</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    main { max-width: 640px; margin: 0 auto; padding: 28px 16px 60px; }
+    ol { padding-left: 20px; margin: 6px 0 0; }
+    ol li { margin: 4px 0; }
+    fieldset { border: 1px solid var(--border); border-radius: 10px; padding: 4px 16px 16px; margin: 20px 0 0; }
+    legend { font-weight: 700; padding: 0 6px; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Meet 會議記錄 → Notion 設定</h1>
+
+    <fieldset>
+      <legend>Notion</legend>
+      <div class="card small" style="margin-top:10px">
+        <ol>
+          <li>到 <a href="https://www.notion.so/profile/integrations" target="_blank">notion.so/profile/integrations</a> 建立 Internal integration（免費），複製 <b>Internal Integration Secret</b>。</li>
+          <li>在 Notion 建立一個資料庫（建議欄位：<b>名稱</b>、<b>日期</b>(Date)、<b>參與者</b>(Multi-select)、<b>會議連結</b>(URL)），也可以用一般頁面。</li>
+          <li>在該資料庫/頁面右上角 <b>⋯ → 連線（Connections）</b> 加入剛剛的 integration。</li>
+          <li>複製該資料庫/頁面的網址貼到下方。</li>
+        </ol>
+      </div>
+      <label for="token">Integration Secret</label>
+      <input id="token" type="password" placeholder="ntn_…" autocomplete="off">
+      <label for="target">目標資料庫或頁面網址</label>
+      <input id="target" type="text" placeholder="https://www.notion.so/…">
+      <div class="row" style="margin-top:10px">
+        <button id="test">測試連線</button>
+        <span id="testStatus" class="status"></span>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>擷取與摘要</legend>
+      <label class="check"><input id="autoCaptions" type="checkbox"> 加入會議時自動開啟 Meet 字幕（擷取逐字稿必須開啟）</label>
+      <label class="check"><input id="autoOpenReview" type="checkbox"> 會議結束時自動開啟整理頁面</label>
+      <label for="aiLang">AI 摘要語言（Chrome 內建 AI）</label>
+      <select id="aiLang">
+        <option value="zh">繁體中文（實驗性，模型官方支援英/日/西）</option>
+        <option value="en">English</option>
+        <option value="ja">日本語</option>
+      </select>
+      <p class="small muted">字幕語言請在 Meet 的「設定 → 字幕」選擇會議使用的語言，逐字稿品質取決於 Meet 字幕。</p>
+    </fieldset>
+
+    <div class="row" style="margin-top:20px">
+      <button id="save" class="primary">儲存</button>
+      <span id="saveStatus" class="status"></span>
+    </div>
+  </main>
+  <script type="module" src="options.js"></script>
+</body>
+</html>
