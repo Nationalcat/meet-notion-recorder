@@ -28,7 +28,7 @@
   let inCall = false;
   let leaveMisses = 0;
   let recording = true;
-  let dirty; // 開始會議時設為 true
+  let dirty; // 逐字稿或標題有變更時設為 true，存檔後清除
   let region = null;
   let observer = null;
   let scanTimer = null;
@@ -172,7 +172,6 @@
       entries: []
     };
     captionClicks = 0;
-    dirty = true;
     send({ type: 'MEETING_STARTED', id: meeting.id });
   }
 
