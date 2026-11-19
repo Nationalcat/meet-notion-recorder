@@ -35,10 +35,22 @@ jobs:
           if-no-files-found: ignore
 
   mutation:
-    name: 變異測試（Stryker 100 分）
+    name: 變異測試 ${{ matrix.shard }}（Stryker 100 分）
     needs: coverage
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - shard: lib
+            mutate: lib/**/*.js
+          - shard: content
+            mutate: content.js
+          - shard: pages
+            mutate: background.js,options.js,popup.js,review.js
+    env:
+      INCREMENTAL_FILE: reports/stryker-incremental-${{ matrix.shard }}.json
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -46,11 +58,24 @@ jobs:
           node-version: 26
           cache: npm
       - run: npm ci
-      - run: npm run mutation
+      # 增量模式：沿用上次的結果，只重測程式碼或測試有變動的 mutant
+      - name: 還原增量結果
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ env.INCREMENTAL_FILE }}
+          key: stryker-${{ matrix.shard }}-${{ github.sha }}
+          restore-keys: stryker-${{ matrix.shard }}-
+      - run: npm run mutation -- --mutate "${{ matrix.mutate }}" --incrementalFile "$INCREMENTAL_FILE"
+      - name: 保存增量結果
+        if: always()
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ env.INCREMENTAL_FILE }}
+          key: stryker-${{ matrix.shard }}-${{ github.sha }}
       - name: 上傳變異測試報告
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: mutation-report
+          name: mutation-report-${{ matrix.shard }}
           path: reports/mutation/
           if-no-files-found: ignore
