@@ -96,6 +96,18 @@ python3 -m http.server 8765
 
 開啟 <http://localhost:8765/test/mock-meet.html>，約 15 秒後頁面會印出擷取結果（也可在 Console 看 `window.__test`）。
 
+## 發佈新版本
+
+1. 把 `manifest.json` 與 `package.json` 的 `version` 改成新版號（例如 `1.2.0`）並 commit、push。
+2. 打 tag 並推上去：
+
+   ```bash
+   git tag v1.2.0
+   git push origin v1.2.0
+   ```
+
+3. GitHub Actions（`.github/workflows/release.yml`）會跑單元測試、檢查 tag 與兩個檔案的版號一致，再打包 `meet-notion-recorder-v1.2.0.zip` 並建立 GitHub Release。下載 zip、解壓縮後用「載入未封裝項目」安裝，也可以直接上傳到 Chrome 線上應用程式商店。
+
 ## 限制與注意事項
 
 - **只能記錄字幕看得到的內容**，準確度取決於 Meet 字幕；講者名稱來自字幕顯示的名字。
